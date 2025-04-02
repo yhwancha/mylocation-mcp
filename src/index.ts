@@ -5,6 +5,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import axios from 'axios';
 import dotenv from 'dotenv';
+import { log } from "console";
 
 // Load environment variables
 dotenv.config();
@@ -41,6 +42,16 @@ function validateCoordinates(lat: string, lon: string): boolean {
     longitude >= -180 && longitude <= 180;
 }
 
+async function getCurrentIP(): Promise<string> {
+  try {
+    const response = await axios.get('https://api.ipify.org?format=json');
+    return response.data.ip;
+  } catch (error) {
+    console.error('Error getting IP:', error);
+    throw new Error('Failed to get current IP address');
+  }
+}
+
 async function getLocationFromIP(ipAddress: string): Promise<LocationResponse> {
   const url = `${config.ipInfoUrl}/${ipAddress}/json`;
   const headers: Record<string, string> = {};
@@ -49,28 +60,36 @@ async function getLocationFromIP(ipAddress: string): Promise<LocationResponse> {
     headers.Authorization = `Bearer ${config.ipInfoToken}`;
   }
 
-  const response = await axios.get<IPInfoResponse>(url, { headers });
-  const ipInfo = response.data;
+  try {
+    const response = await axios.get<IPInfoResponse>(url, { headers });
+    const ipInfo = response.data;
 
-  const locationData: Record<string, any> = {
-    ip: ipInfo.ip,
-    city: ipInfo.city,
-    region: ipInfo.region,
-    country: ipInfo.country,
-    org: ipInfo.org,
-  };
+    const locationData: Record<string, any> = {
+      ip: ipInfo.ip,
+      city: ipInfo.city,
+      region: ipInfo.region,
+      country: ipInfo.country,
+      org: ipInfo.org,
+    };
 
-  if (ipInfo.loc) {
-    const [lat, lon] = ipInfo.loc.split(',');
-    locationData.latitude = parseFloat(lat);
-    locationData.longitude = parseFloat(lon);
+    if (ipInfo.loc) {
+      const [lat, lon] = ipInfo.loc.split(',');
+      locationData.latitude = parseFloat(lat);
+      locationData.longitude = parseFloat(lon);
+    }
+
+    return {
+      status: 'success',
+      source: 'ip_based',
+      data: locationData,
+    };
+  } catch (error) {
+    console.error('Error getting location:', error);
+    return {
+      status: 'error',
+      error: 'Failed to get location information',
+    };
   }
-
-  return {
-    status: 'success',
-    source: 'ip_based',
-    data: locationData,
-  };
 }
 
 // Create server instance
@@ -149,6 +168,40 @@ server.tool(
             text: JSON.stringify({
               status: 'error',
               error: 'Failed to determine location',
+            }),
+          },
+        ],
+      };
+    }
+  },
+);
+
+server.tool(
+  "get-my-location",
+  "Get location information using current IP address via ipify and ipinfo",
+  {},
+  async () => {
+    try {
+      const ipAddress = await getCurrentIP();
+      const location = await getLocationFromIP(ipAddress);
+      
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(location),
+          },
+        ],
+      };
+    } catch (error) {
+      console.error('Error in get-my-location:', error);
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              status: 'error',
+              error: 'Failed to determine location using current IP',
             }),
           },
         ],

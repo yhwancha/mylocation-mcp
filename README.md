@@ -57,7 +57,7 @@ npm run build
 .
 ├── src/
 │   └── index.ts    # Main server implementation with location tools
-├── dist/           # Compiled JavaScript files
+├── build/           # Compiled JavaScript files
 ├── package.json    # Project dependencies and scripts
 ├── tsconfig.json   # TypeScript configuration
 ├── .env.example    # Environment variables template

@@ -6,7 +6,7 @@ yarn-error.log*
 
 # TypeScript build output
 build/
-dist/
+build/
 *.tsbuildinfo
 
 # IDE and editor files
