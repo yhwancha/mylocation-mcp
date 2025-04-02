@@ -1,108 +1,137 @@
-# MCP Server TypeScript Starter
+# MyLocation MCP
 
-This is a starter template for creating a Model Context Protocol (MCP) server using TypeScript. It provides a basic setup with a sample tool implementation to help you get started with building your own MCP server.
+위치 정보를 제공하는 Model Context Protocol (MCP) 서버입니다. 좌표 기반 또는 IP 주소 기반으로 위치 정보를 조회할 수 있습니다.
 
-## Features
+## 주요 기능
 
-- TypeScript configuration
-- Basic MCP server setup
-- Sample tool implementation
-- Type-safe development environment
+- 좌표 기반 위치 정보 조회
+- IP 주소 기반 위치 정보 조회 (IPInfo.io 서비스 사용)
+- 서비스 상태 확인
 
-## Getting Started
+## 설치 방법
 
-Follow these steps to create your own MCP server:
+1. 저장소 클론:
+   ```bash
+   git clone https://github.com/yhwancha/mylocation-mcp.git
+   cd mylocation-mcp
+   ```
 
-```bash
-# Create a new directory for your project
-mkdir <project_name>
-cd <project_name>
+2. 의존성 설치:
+   ```bash
+   npm install
+   ```
 
-# Initialize a new npm project
-npm init -y
+3. 환경 변수 설정:
+   ```bash
+   cp .env.example .env
+   ```
+   `.env` 파일을 열어 IPInfo API 토큰을 설정합니다:
+   ```
+   IPINFO_TOKEN=your_ipinfo_token_here
+   ```
+   - IPInfo API 토큰은 [IPInfo.io](https://ipinfo.io)에서 무료로 발급받을 수 있습니다.
 
-# Install dependencies
-npm install @modelcontextprotocol/sdk zod
-npm install -D @types/node typescript
-
-# Create source directory and main file
-mkdir src
-touch src/index.ts
-```
-
-## Project Structure
-
-```
-.
-├── src/
-│   └── index.ts    # Main server implementation
-├── package.json    # Project dependencies and scripts
-└── tsconfig.json   # TypeScript configuration
-```
-
-## Development
-
-1. Implement your tools in `src/index.ts`
-2. Build the project:
+4. 프로젝트 빌드:
    ```bash
    npm run build
    ```
 
-## Adding New Tools
+## 실행 방법
 
-To add a new tool, use the `server.tool()` method. Example:
-
-```typescript
-server.tool(
-  "tool-name",
-  "tool-description",
-  { 
-    // Define your tool's parameters using Zod schema
-    param: z.string().describe("parameter description") 
-  },
-  async ({ param }) => {
-    // Implement your tool logic here
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Tool executed with parameter: ${param}`,
-        },
-      ],
-    };
-  },
-);
+서버 실행:
+```bash
+npm start
 ```
 
-## MCP Server Configuration
+개발 모드로 실행 (자동 재시작):
+```bash
+npm run dev
+```
 
-You can configure multiple MCP servers in your project. Here's an example configuration:
+## 사용 가능한 도구
 
+### 1. get-location-by-coordinates
+
+좌표를 기반으로 위치 정보를 조회합니다.
+
+**매개변수:**
+- `latitude`: 위도 (-90 ~ 90)
+- `longitude`: 경도 (-180 ~ 180)
+
+**예시 응답:**
 ```json
 {
-    "mcpServers": {
-        "<server_name>": {
-            "command": "<command>",
-            "args": [
-                "--directory",
-                "/ABSOLUTE/PATH/TO/PARENT/FOLDER/<project_name>",
-                "run",
-                "<script_name>"
-            ]
-        }
-    }
+  "status": "success",
+  "source": "user_provided",
+  "data": {
+    "latitude": 37.5665,
+    "longitude": 126.9780
+  }
 }
 ```
 
-This configuration specifies:
-- `<server_name>`: A unique identifier for your MCP server
-- `command`: The command to run your script (e.g., `python`, `node`, `uv`)
-- `args`: An array of command-line arguments
-  - `--directory`: Sets the working directory for the script
-  - Other arguments specific to your command and script needs
+### 2. get-location-by-ip
 
-You can configure multiple servers by adding more entries to the `mcpServers` object.
+IP 주소를 기반으로 위치 정보를 조회합니다.
 
-## License
+**매개변수:**
+- `ipAddress`: IP 주소 (예: "8.8.8.8")
 
-ISC
+**예시 응답:**
+```json
+{
+  "status": "success",
+  "source": "ip_based",
+  "data": {
+    "ip": "8.8.8.8",
+    "city": "Mountain View",
+    "region": "California",
+    "country": "US",
+    "org": "Google LLC",
+    "latitude": 37.386,
+    "longitude": -122.0838
+  }
+}
+```
+
+### 3. health
+
+서비스의 상태를 확인합니다.
+
+**매개변수:** 없음
+
+**예시 응답:**
+```json
+{
+  "status": "healthy",
+  "service": "mylocation-mcp"
+}
+```
+
+## 에러 처리
+
+모든 응답은 다음과 같은 형식을 따릅니다:
+
+```json
+{
+  "status": "success|error",
+  "source": "user_provided|ip_based",
+  "data": {
+    // 성공 시 위치 데이터
+  },
+  "error": "에러 발생 시 에러 메시지"
+}
+```
+
+## 기술 스택
+
+- TypeScript
+- Model Context Protocol (MCP)
+- IPInfo.io API
+- Node.js
+- Zod (스키마 검증)
+- Axios (HTTP 클라이언트)
+
+## 라이선스
+
+이 프로젝트는 MIT 라이선스를 따릅니다.
