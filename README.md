@@ -13,9 +13,27 @@ This is a Model Context Protocol (MCP) server implementation that provides locat
 - Type-safe development environment
 - Integration with external APIs
 
-## Getting Started
+## Installation
 
-Follow these steps to set up the location MCP server:
+```bash
+npm install mylocation-mcp
+```
+
+## Usage
+
+1. Create a `.env` file with your IPInfo.io API token:
+```bash
+IPINFO_TOKEN=your_ipinfo_token_here
+```
+
+2. Import and use in your code:
+```typescript
+import { McpServer } from 'mylocation-mcp';
+```
+
+## Development
+
+If you want to modify or contribute to the package:
 
 ```bash
 # Clone the repository
@@ -39,27 +57,12 @@ npm run build
 .
 ├── src/
 │   └── index.ts    # Main server implementation with location tools
+├── dist/           # Compiled JavaScript files
 ├── package.json    # Project dependencies and scripts
 ├── tsconfig.json   # TypeScript configuration
 ├── .env.example    # Environment variables template
 └── README.md      # Documentation
 ```
-
-## Development
-
-1. The main implementation is in `src/index.ts`
-2. Build the project:
-   ```bash
-   npm run build
-   ```
-3. Run the server:
-   ```bash
-   npm start
-   ```
-4. For development with auto-reload:
-   ```bash
-   npm run dev
-   ```
 
 ## Implemented Tools
 
@@ -115,68 +118,15 @@ To use this MCP server in your project, add the following configuration:
 {
     "mcpServers": {
         "location-service": {
-            "command": "node",
+            "command": "npx",
             "args": [
-                "--directory",
-                "/path/to/mylocation-mcp",
-                "run",
-                "start"
+                "mylocation-mcp"
             ]
         }
     }
 }
 ```
 
-### Claude Configuration
-
-For use with Claude, include these tool definitions:
-
-```json
-{
-  "tools": [
-    {
-      "name": "get-location-by-coordinates",
-      "description": "Get location information from provided coordinates",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "latitude": {
-            "type": "string",
-            "description": "Latitude coordinate (-90 to 90)"
-          },
-          "longitude": {
-            "type": "string",
-            "description": "Longitude coordinate (-180 to 180)"
-          }
-        },
-        "required": ["latitude", "longitude"]
-      }
-    },
-    {
-      "name": "get-location-by-ip",
-      "description": "Get location information from IP address",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "ipAddress": {
-            "type": "string",
-            "description": "IP address to lookup"
-          }
-        },
-        "required": ["ipAddress"]
-      }
-    },
-    {
-      "name": "health",
-      "description": "Check the health status of the service",
-      "parameters": {
-        "type": "object",
-        "properties": {}
-      }
-    }
-  ]
-}
-```
 
 ## Response Format
 

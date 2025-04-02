@@ -1,32 +1,56 @@
 {
-  "name": "mylocation-mcp",
-  "version": "1.0.0",
+  "name": "mylocation-mcp-server",
+  "version": "1.0.7",
   "description": "MCP server for location services",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "type": "module",
-  "scripts": {
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "dev": "ts-node src/index.ts"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "bin": {
-    "weather": "./build/index.js"
+    "mylocation-mcp-server": "./dist/index.js"
   },
   "files": [
-    "build"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run build",
+    "version": "git add -A src",
+    "postversion": "git push && git push --tags"
+  },
+  "keywords": [
+    "mcp",
+    "location",
+    "geolocation",
+    "ipinfo",
+    "claude",
+    "ai",
+    "typescript"
+  ],
+  "author": "yhwancha",
+  "license": "MIT",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^0.1.0",
+    "@modelcontextprotocol/sdk": "^1.8.0",
     "axios": "^1.6.7",
     "dotenv": "^16.4.5",
-    "zod": "^3.22.4"
+    "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@types/node": "^20.11.24",
-    "typescript": "^5.3.3",
-    "ts-node": "^10.9.2"
-  }
+    "@types/node": "^20.17.30",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yhwancha/mylocation-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yhwancha/mylocation-mcp/issues"
+  },
+  "homepage": "https://github.com/yhwancha/mylocation-mcp#readme"
 }
