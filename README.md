@@ -1,64 +1,130 @@
 # MyLocation MCP
 
-위치 정보를 제공하는 Model Context Protocol (MCP) 서버입니다. 좌표 기반 또는 IP 주소 기반으로 위치 정보를 조회할 수 있습니다.
+A Model Context Protocol (MCP) server that provides location services. It can determine location either through provided coordinates or IP address lookup using the IPInfo.io service.
 
-## 주요 기능
+## Features
 
-- 좌표 기반 위치 정보 조회
-- IP 주소 기반 위치 정보 조회 (IPInfo.io 서비스 사용)
-- 서비스 상태 확인
+- Get location from coordinates
+- Get location from IP address (using IPInfo.io)
+- Health check endpoint
+- Easy integration with Claude and other AI models
 
-## 설치 방법
+## Setup
 
-1. 저장소 클론:
+1. Clone the repository:
    ```bash
    git clone https://github.com/yhwancha/mylocation-mcp.git
    cd mylocation-mcp
    ```
 
-2. 의존성 설치:
+2. Install dependencies:
    ```bash
    npm install
    ```
 
-3. 환경 변수 설정:
+3. Set up environment variables:
    ```bash
    cp .env.example .env
    ```
-   `.env` 파일을 열어 IPInfo API 토큰을 설정합니다:
+   Open `.env` and set your IPInfo API token:
    ```
    IPINFO_TOKEN=your_ipinfo_token_here
    ```
-   - IPInfo API 토큰은 [IPInfo.io](https://ipinfo.io)에서 무료로 발급받을 수 있습니다.
+   - You can get a free API token from [IPInfo.io](https://ipinfo.io)
 
-4. 프로젝트 빌드:
+4. Build the project:
    ```bash
    npm run build
    ```
 
-## 실행 방법
+## Running the Server
 
-서버 실행:
+Start the server:
 ```bash
 npm start
 ```
 
-개발 모드로 실행 (자동 재시작):
+For development with auto-reload:
 ```bash
 npm run dev
 ```
 
-## 사용 가능한 도구
+## MCP Configuration
+
+### Claude Configuration
+
+To use this MCP server with Claude, add the following configuration to your Claude prompt or settings:
+
+```json
+{
+  "tools": [
+    {
+      "name": "get-location-by-coordinates",
+      "description": "Get location information from provided coordinates",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "latitude": {
+            "type": "string",
+            "description": "Latitude coordinate (-90 to 90)"
+          },
+          "longitude": {
+            "type": "string",
+            "description": "Longitude coordinate (-180 to 180)"
+          }
+        },
+        "required": ["latitude", "longitude"]
+      }
+    },
+    {
+      "name": "get-location-by-ip",
+      "description": "Get location information from IP address",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "ipAddress": {
+            "type": "string",
+            "description": "IP address to lookup"
+          }
+        },
+        "required": ["ipAddress"]
+      }
+    },
+    {
+      "name": "health",
+      "description": "Check the health status of the service",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+  ]
+}
+```
+
+### Connection Settings
+
+The MCP server runs on stdio by default. Make sure your client is configured to communicate through stdio.
+
+## Available Tools
 
 ### 1. get-location-by-coordinates
 
-좌표를 기반으로 위치 정보를 조회합니다.
+Get location information from provided coordinates.
 
-**매개변수:**
-- `latitude`: 위도 (-90 ~ 90)
-- `longitude`: 경도 (-180 ~ 180)
+**Parameters:**
+- `latitude`: Latitude coordinate (-90 to 90)
+- `longitude`: Longitude coordinate (-180 to 180)
 
-**예시 응답:**
+**Example Request:**
+```json
+{
+  "latitude": "37.5665",
+  "longitude": "126.9780"
+}
+```
+
+**Example Response:**
 ```json
 {
   "status": "success",
@@ -72,12 +138,19 @@ npm run dev
 
 ### 2. get-location-by-ip
 
-IP 주소를 기반으로 위치 정보를 조회합니다.
+Get location information from an IP address.
 
-**매개변수:**
-- `ipAddress`: IP 주소 (예: "8.8.8.8")
+**Parameters:**
+- `ipAddress`: IP address (e.g., "8.8.8.8")
 
-**예시 응답:**
+**Example Request:**
+```json
+{
+  "ipAddress": "8.8.8.8"
+}
+```
+
+**Example Response:**
 ```json
 {
   "status": "success",
@@ -96,11 +169,11 @@ IP 주소를 기반으로 위치 정보를 조회합니다.
 
 ### 3. health
 
-서비스의 상태를 확인합니다.
+Check the service health status.
 
-**매개변수:** 없음
+**Parameters:** None
 
-**예시 응답:**
+**Example Response:**
 ```json
 {
   "status": "healthy",
@@ -108,30 +181,80 @@ IP 주소를 기반으로 위치 정보를 조회합니다.
 }
 ```
 
-## 에러 처리
+## Error Handling
 
-모든 응답은 다음과 같은 형식을 따릅니다:
+All responses follow this format:
 
 ```json
 {
   "status": "success|error",
   "source": "user_provided|ip_based",
   "data": {
-    // 성공 시 위치 데이터
+    // Location data when successful
   },
-  "error": "에러 발생 시 에러 메시지"
+  "error": "Error message when failed"
 }
 ```
 
-## 기술 스택
+Common error scenarios:
+- Invalid coordinates (outside valid ranges)
+- Invalid IP address format
+- IPInfo API token not configured
+- Network errors when calling IPInfo API
+
+## Integration Examples
+
+### Using with Claude
+
+```python
+# Example of using the location service with Claude
+location = await claude.invoke_tool("get-location-by-ip", {
+    "ipAddress": "8.8.8.8"
+})
+print(location.data)  # Access the location data
+```
+
+### Using with Other MCP Clients
+
+```typescript
+// Example using TypeScript MCP client
+const client = new McpClient();
+const response = await client.invoke("get-location-by-coordinates", {
+    latitude: "37.5665",
+    longitude: "126.9780"
+});
+```
+
+## Technical Stack
 
 - TypeScript
 - Model Context Protocol (MCP)
 - IPInfo.io API
 - Node.js
-- Zod (스키마 검증)
-- Axios (HTTP 클라이언트)
+- Zod (Schema validation)
+- Axios (HTTP client)
 
-## 라이선스
+## Development
 
-이 프로젝트는 MIT 라이선스를 따릅니다.
+### Project Structure
+```
+mylocation-mcp/
+├── src/
+│   └── index.ts    # Main server implementation
+├── package.json    # Project dependencies and scripts
+├── tsconfig.json   # TypeScript configuration
+├── .env.example    # Environment variables template
+└── README.md      # Documentation
+```
+
+### Adding New Features
+
+To add new location-related features:
+1. Define the tool in the server configuration
+2. Implement the tool logic in `src/index.ts`
+3. Update the README with the new tool documentation
+4. Update the Claude configuration if needed
+
+## License
+
+This project is licensed under the MIT License.
