@@ -120,8 +120,12 @@ To use this MCP server in your project, add the following configuration:
         "location-service": {
             "command": "npx",
             "args": [
-                "mylocation-mcp"
-            ]
+              "-y",
+              "mylocation-mcp-server"
+            ],
+            "env": {
+              "IPINFO_TOKEN": <IPINFO_TOKEN>
+            }
         }
     }
 }
