@@ -1,59 +1,135 @@
-# MyLocation MCP
+# MCP Server TypeScript Starter
 
-A Model Context Protocol (MCP) server that provides location services. It can determine location either through provided coordinates or IP address lookup using the IPInfo.io service.
+This is a Model Context Protocol (MCP) server implementation that provides location services. It demonstrates how to build an MCP server using TypeScript with real-world functionality for location lookups via coordinates or IP addresses.
 
 ## Features
 
-- Get location from coordinates
-- Get location from IP address (using IPInfo.io)
-- Health check endpoint
-- Easy integration with Claude and other AI models
+- TypeScript configuration
+- Complete MCP server setup
+- Location service implementation
+  - Coordinate-based location lookup
+  - IP-based location lookup (using IPInfo.io)
+  - Health check endpoint
+- Type-safe development environment
+- Integration with external APIs
 
-## Setup
+## Getting Started
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yhwancha/mylocation-mcp.git
-   cd mylocation-mcp
-   ```
+Follow these steps to set up the location MCP server:
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+```bash
+# Clone the repository
+git clone https://github.com/yhwancha/mylocation-mcp.git
+cd mylocation-mcp
 
-3. Set up environment variables:
-   ```bash
-   cp .env.example .env
-   ```
-   Open `.env` and set your IPInfo API token:
-   ```
-   IPINFO_TOKEN=your_ipinfo_token_here
-   ```
-   - You can get a free API token from [IPInfo.io](https://ipinfo.io)
+# Install dependencies
+npm install
 
-4. Build the project:
+# Set up environment variables
+cp .env.example .env
+# Edit .env and add your IPInfo.io API token
+
+# Build the project
+npm run build
+```
+
+## Project Structure
+
+```
+.
+├── src/
+│   └── index.ts    # Main server implementation with location tools
+├── package.json    # Project dependencies and scripts
+├── tsconfig.json   # TypeScript configuration
+├── .env.example    # Environment variables template
+└── README.md      # Documentation
+```
+
+## Development
+
+1. The main implementation is in `src/index.ts`
+2. Build the project:
    ```bash
    npm run build
    ```
+3. Run the server:
+   ```bash
+   npm start
+   ```
+4. For development with auto-reload:
+   ```bash
+   npm run dev
+   ```
 
-## Running the Server
+## Implemented Tools
 
-Start the server:
-```bash
-npm start
+### 1. get-location-by-coordinates
+
+```typescript
+server.tool(
+  "get-location-by-coordinates",
+  "Get location information from provided coordinates",
+  {
+    latitude: z.string().describe("Latitude coordinate (-90 to 90)"),
+    longitude: z.string().describe("Longitude coordinate (-180 to 180)")
+  },
+  async ({ latitude, longitude }) => {
+    // Implementation details...
+  }
+);
 ```
 
-For development with auto-reload:
-```bash
-npm run dev
+### 2. get-location-by-ip
+
+```typescript
+server.tool(
+  "get-location-by-ip",
+  "Get location information from IP address",
+  {
+    ipAddress: z.string().describe("IP address to lookup")
+  },
+  async ({ ipAddress }) => {
+    // Implementation details...
+  }
+);
 ```
 
-## MCP Configuration
+### 3. health
+
+```typescript
+server.tool(
+  "health",
+  "Check the health status of the service",
+  {},
+  async () => {
+    // Implementation details...
+  }
+);
+```
+
+## MCP Server Configuration
+
+To use this MCP server in your project, add the following configuration:
+
+```json
+{
+    "mcpServers": {
+        "location-service": {
+            "command": "node",
+            "args": [
+                "--directory",
+                "/path/to/mylocation-mcp",
+                "run",
+                "start"
+            ]
+        }
+    }
+}
+```
 
 ### Claude Configuration
 
-To use this MCP server with Claude, add the following configuration to your Claude prompt or settings:
+For use with Claude, include these tool definitions:
 
 ```json
 {
@@ -102,89 +178,22 @@ To use this MCP server with Claude, add the following configuration to your Clau
 }
 ```
 
-### Connection Settings
+## Response Format
 
-The MCP server runs on stdio by default. Make sure your client is configured to communicate through stdio.
+All tools return responses in this format:
 
-## Available Tools
-
-### 1. get-location-by-coordinates
-
-Get location information from provided coordinates.
-
-**Parameters:**
-- `latitude`: Latitude coordinate (-90 to 90)
-- `longitude`: Longitude coordinate (-180 to 180)
-
-**Example Request:**
 ```json
 {
-  "latitude": "37.5665",
-  "longitude": "126.9780"
+  "content": [
+    {
+      "type": "text",
+      "text": "JSON string containing the response data"
+    }
+  ]
 }
 ```
 
-**Example Response:**
-```json
-{
-  "status": "success",
-  "source": "user_provided",
-  "data": {
-    "latitude": 37.5665,
-    "longitude": 126.9780
-  }
-}
-```
-
-### 2. get-location-by-ip
-
-Get location information from an IP address.
-
-**Parameters:**
-- `ipAddress`: IP address (e.g., "8.8.8.8")
-
-**Example Request:**
-```json
-{
-  "ipAddress": "8.8.8.8"
-}
-```
-
-**Example Response:**
-```json
-{
-  "status": "success",
-  "source": "ip_based",
-  "data": {
-    "ip": "8.8.8.8",
-    "city": "Mountain View",
-    "region": "California",
-    "country": "US",
-    "org": "Google LLC",
-    "latitude": 37.386,
-    "longitude": -122.0838
-  }
-}
-```
-
-### 3. health
-
-Check the service health status.
-
-**Parameters:** None
-
-**Example Response:**
-```json
-{
-  "status": "healthy",
-  "service": "mylocation-mcp"
-}
-```
-
-## Error Handling
-
-All responses follow this format:
-
+The response data follows this structure:
 ```json
 {
   "status": "success|error",
@@ -196,65 +205,14 @@ All responses follow this format:
 }
 ```
 
-Common error scenarios:
-- Invalid coordinates (outside valid ranges)
-- Invalid IP address format
-- IPInfo API token not configured
-- Network errors when calling IPInfo API
+## Dependencies
 
-## Integration Examples
-
-### Using with Claude
-
-```python
-# Example of using the location service with Claude
-location = await claude.invoke_tool("get-location-by-ip", {
-    "ipAddress": "8.8.8.8"
-})
-print(location.data)  # Access the location data
-```
-
-### Using with Other MCP Clients
-
-```typescript
-// Example using TypeScript MCP client
-const client = new McpClient();
-const response = await client.invoke("get-location-by-coordinates", {
-    latitude: "37.5665",
-    longitude: "126.9780"
-});
-```
-
-## Technical Stack
-
-- TypeScript
-- Model Context Protocol (MCP)
-- IPInfo.io API
-- Node.js
-- Zod (Schema validation)
-- Axios (HTTP client)
-
-## Development
-
-### Project Structure
-```
-mylocation-mcp/
-├── src/
-│   └── index.ts    # Main server implementation
-├── package.json    # Project dependencies and scripts
-├── tsconfig.json   # TypeScript configuration
-├── .env.example    # Environment variables template
-└── README.md      # Documentation
-```
-
-### Adding New Features
-
-To add new location-related features:
-1. Define the tool in the server configuration
-2. Implement the tool logic in `src/index.ts`
-3. Update the README with the new tool documentation
-4. Update the Claude configuration if needed
+- `@modelcontextprotocol/sdk`: MCP server implementation
+- `zod`: Schema validation
+- `axios`: HTTP client for IPInfo API
+- `dotenv`: Environment variable management
+- TypeScript development tools
 
 ## License
 
-This project is licensed under the MIT License.
+MIT
